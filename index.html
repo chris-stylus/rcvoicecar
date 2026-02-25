@@ -43,9 +43,9 @@
 <body class="flex flex-col h-screen overflow-hidden">
 
     <!-- Header & Status -->
-    <header class="p-6 text-center border-b border-slate-700 bg-slate-900">
-        <h1 class="text-2xl font-bold text-blue-400">RC Commander</h1>
-        <div class="mt-2 flex justify-center items-center gap-4 text-sm">
+    <header class="p-4 text-center border-b border-slate-700 bg-slate-900">
+        <h1 class="text-xl font-bold text-blue-400">RC Commander Pro</h1>
+        <div class="mt-2 flex justify-center items-center gap-4 text-xs">
             <div id="connectionStatus">
                 <span class="status-dot bg-red-500"></span>Disconnected
             </div>
@@ -61,9 +61,12 @@
             <div class="text-red-500 mb-4">
                 <svg class="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
             </div>
-            <h2 class="text-xl font-bold mb-2">Browser Restriction</h2>
+            <h2 class="text-xl font-bold mb-2">Hardware Access Denied</h2>
             <p class="text-slate-300 text-sm mb-6 leading-relaxed">
-                This environment (Preview) blocks Bluetooth for security. To use the controller, please <b>copy this code</b> and save it as an <b>.html</b> file on your computer/phone.
+                Browser security blocks Bluetooth/Serial in this preview. <br><br>
+                1. <b>Download/Copy</b> this code.<br>
+                2. Save as <b>index.html</b>.<br>
+                3. Open in <b>Chrome/Edge</b>.
             </p>
             <button onclick="document.getElementById('errorOverlay').style.display='none'" class="w-full bg-slate-700 py-3 rounded-xl font-bold">Dismiss</button>
         </div>
@@ -72,11 +75,17 @@
     <!-- Main Control Area -->
     <main class="flex-grow flex flex-col items-center justify-around p-4">
         
+        <!-- Connection Mode Toggle -->
+        <div class="flex bg-slate-800 p-1 rounded-xl w-full max-w-xs mb-4">
+            <button id="modeSerial" class="flex-1 py-2 rounded-lg text-xs font-bold bg-blue-600 text-white transition">USB/Classic BT (Serial)</button>
+            <button id="modeBLE" class="flex-1 py-2 rounded-lg text-xs font-bold text-slate-400 hover:text-white transition">BLE (Bluetooth Low Energy)</button>
+        </div>
+
         <!-- Voice Command Visualization -->
         <div class="w-full max-w-md bg-slate-800 rounded-2xl p-4 text-center border border-slate-700">
-            <p class="text-slate-400 text-xs uppercase tracking-widest mb-2">Voice Command</p>
-            <div id="lastCommand" class="text-3xl font-mono text-blue-300 h-10 flex items-center justify-center">
-                ...
+            <p class="text-slate-400 text-[10px] uppercase tracking-widest mb-1">Last Command</p>
+            <div id="lastCommand" class="text-2xl font-mono text-blue-300 h-8 flex items-center justify-center">
+                IDLE
             </div>
         </div>
 
@@ -84,23 +93,23 @@
         <div class="grid grid-cols-3 gap-4 w-full max-w-xs aspect-square">
             <div></div>
             <button id="btn-forward" class="control-btn bg-slate-700 rounded-2xl flex items-center justify-center shadow-lg active:bg-blue-600 h-20 w-20 mx-auto" onpointerdown="sendCommand('F')" onpointerup="sendCommand('S')">
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m18 15-6-6-6 6"/></svg>
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m18 15-6-6-6 6"/></svg>
             </button>
             <div></div>
 
             <button id="btn-left" class="control-btn bg-slate-700 rounded-2xl flex items-center justify-center shadow-lg active:bg-blue-600 h-20 w-20 mx-auto" onpointerdown="sendCommand('L')" onpointerup="sendCommand('S')">
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m15 18-6-6 6-6"/></svg>
             </button>
-            <button id="btn-stop" class="bg-red-900/40 border-2 border-red-500 text-red-500 rounded-full flex items-center justify-center h-20 w-20 mx-auto font-bold" onclick="sendCommand('S')">
+            <button id="btn-stop" class="bg-red-900/40 border-2 border-red-500 text-red-500 rounded-full flex items-center justify-center h-20 w-20 mx-auto font-black text-sm" onclick="sendCommand('S')">
                 STOP
             </button>
             <button id="btn-right" class="control-btn bg-slate-700 rounded-2xl flex items-center justify-center shadow-lg active:bg-blue-600 h-20 w-20 mx-auto" onpointerdown="sendCommand('R')" onpointerup="sendCommand('S')">
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 18 6-6-6-6"/></svg>
             </button>
 
             <div></div>
             <button id="btn-backward" class="control-btn bg-slate-700 rounded-2xl flex items-center justify-center shadow-lg active:bg-blue-600 h-20 w-20 mx-auto" onpointerdown="sendCommand('B')" onpointerup="sendCommand('S')">
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
             </button>
             <div></div>
         </div>
@@ -109,7 +118,7 @@
         <div class="flex gap-4 w-full max-w-md">
             <button id="connectBtn" class="flex-1 bg-blue-600 hover:bg-blue-500 py-4 rounded-xl font-bold shadow-lg transition flex items-center justify-center gap-2">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M5 12h14"/></svg>
-                Connect Bluetooth
+                Connect
             </button>
             <button id="voiceBtn" class="w-16 h-16 bg-slate-700 rounded-full flex items-center justify-center shadow-lg transition">
                 <svg id="micIcon" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-white">
@@ -119,55 +128,45 @@
         </div>
     </main>
 
-    <footer class="p-4 bg-slate-900 border-t border-slate-800 text-center text-[10px] text-slate-500 uppercase">
-        Use Chrome/Edge/Bluefy • Run as local file for hardware access
+    <footer class="p-3 bg-slate-900 border-t border-slate-800 text-center text-[9px] text-slate-500 uppercase tracking-tighter">
+        Serial: HC-05 (PC) • BLE: HM-10 (Mobile) • Open as Local File
     </footer>
 
     <script>
-        let bluetoothDevice;
-        let characteristic;
+        let connectionMode = 'serial'; // 'serial' or 'ble'
+        let port, writer; // Serial variables
+        let bluetoothDevice, characteristic; // BLE variables
+        
         const lastCommandEl = document.getElementById('lastCommand');
         const connectionStatusEl = document.getElementById('connectionStatus');
         const voiceStatusEl = document.getElementById('voiceStatus');
         const voiceBtn = document.getElementById('voiceBtn');
-        const micIcon = document.getElementById('micIcon');
         const connectBtn = document.getElementById('connectBtn');
         const errorOverlay = document.getElementById('errorOverlay');
 
-        const commands = {
-            'forward': 'F',
-            'backward': 'B',
-            'back': 'B',
-            'left': 'L',
-            'right': 'R',
-            'stop': 'S'
-        };
+        // Toggle Modes
+        document.getElementById('modeSerial').addEventListener('click', () => {
+            connectionMode = 'serial';
+            document.getElementById('modeSerial').className = "flex-1 py-2 rounded-lg text-xs font-bold bg-blue-600 text-white transition";
+            document.getElementById('modeBLE').className = "flex-1 py-2 rounded-lg text-xs font-bold text-slate-400 hover:text-white transition";
+        });
 
+        document.getElementById('modeBLE').addEventListener('click', () => {
+            connectionMode = 'ble';
+            document.getElementById('modeBLE').className = "flex-1 py-2 rounded-lg text-xs font-bold bg-blue-600 text-white transition";
+            document.getElementById('modeSerial').className = "flex-1 py-2 rounded-lg text-xs font-bold text-slate-400 hover:text-white transition";
+        });
+
+        // Connection Handler
         connectBtn.addEventListener('click', async () => {
-            if (!navigator.bluetooth) {
-                alert("Web Bluetooth is not supported by this browser.");
-                return;
-            }
-
             try {
-                bluetoothDevice = await navigator.bluetooth.requestDevice({
-                    filters: [{ namePrefix: 'HC' }, { namePrefix: 'BT' }, { namePrefix: 'HM' }],
-                    optionalServices: ['0000ffe0-0000-1000-8000-00805f9b34fb']
-                });
-
-                const server = await bluetoothDevice.gatt.connect();
-                const service = await server.getPrimaryService('0000ffe0-0000-1000-8000-00805f9b34fb');
-                characteristic = await service.getCharacteristic('0000ffe1-0000-1000-8000-00805f9b34fb');
-
-                connectionStatusEl.innerHTML = '<span class="status-dot bg-green-500"></span>Connected';
-                connectBtn.textContent = "Connected";
-                connectBtn.classList.replace('bg-blue-600', 'bg-green-600');
-                
-                bluetoothDevice.addEventListener('gattserverdisconnected', onDisconnected);
+                if (connectionMode === 'serial') {
+                    await connectSerial();
+                } else {
+                    await connectBLE();
+                }
             } catch (err) {
-                console.error('Bluetooth error:', err);
-                
-                // Specifically catch SecurityError related to Permissions Policy
+                console.error('Connection error:', err);
                 if (err.name === 'SecurityError' || err.message.includes('permissions policy')) {
                     errorOverlay.style.display = 'flex';
                 } else {
@@ -176,62 +175,80 @@
             }
         });
 
-        function onDisconnected() {
-            connectionStatusEl.innerHTML = '<span class="status-dot bg-red-500"></span>Disconnected';
-            connectBtn.textContent = "Connect Bluetooth";
-            connectBtn.classList.replace('bg-green-600', 'bg-blue-600');
-            characteristic = null;
+        async function connectSerial() {
+            if (!navigator.serial) throw { name: 'SerialNotSupported' };
+            port = await navigator.serial.requestPort();
+            await port.open({ baudRate: 9600 });
+            writer = port.writable.getWriter();
+            setConnectedStatus(true);
+        }
+
+        async function connectBLE() {
+            if (!navigator.bluetooth) throw { name: 'BluetoothNotSupported' };
+            bluetoothDevice = await navigator.bluetooth.requestDevice({
+                filters: [{ namePrefix: 'HC' }, { namePrefix: 'BT' }, { namePrefix: 'HM' }],
+                optionalServices: ['0000ffe0-0000-1000-8000-00805f9b34fb']
+            });
+            const server = await bluetoothDevice.gatt.connect();
+            const service = await server.getPrimaryService('0000ffe0-0000-1000-8000-00805f9b34fb');
+            characteristic = await service.getCharacteristic('0000ffe1-0000-1000-8000-00805f9b34fb');
+            setConnectedStatus(true);
+            bluetoothDevice.addEventListener('gattserverdisconnected', () => setConnectedStatus(false));
+        }
+
+        function setConnectedStatus(connected) {
+            if (connected) {
+                connectionStatusEl.innerHTML = '<span class="status-dot bg-green-500"></span>Connected';
+                connectBtn.textContent = "Connected";
+                connectBtn.classList.replace('bg-blue-600', 'bg-green-600');
+            } else {
+                connectionStatusEl.innerHTML = '<span class="status-dot bg-red-500"></span>Disconnected';
+                connectBtn.textContent = "Connect";
+                connectBtn.classList.replace('bg-green-600', 'bg-blue-600');
+                writer = null;
+                characteristic = null;
+            }
         }
 
         async function sendCommand(command) {
             lastCommandEl.textContent = command;
+            const data = new TextEncoder().encode(command);
             
-            if (characteristic) {
-                try {
-                    const data = new TextEncoder().encode(command);
+            try {
+                if (connectionMode === 'serial' && writer) {
+                    await writer.write(data);
+                } else if (connectionMode === 'ble' && characteristic) {
                     await characteristic.writeValue(data);
-                } catch (e) {
-                    console.error("Send failed:", e);
                 }
+            } catch (e) {
+                console.error("Send failed:", e);
             }
         }
 
         // Voice Recognition
+        const commands = {'forward': 'F', 'backward': 'B', 'back': 'B', 'left': 'L', 'right': 'R', 'stop': 'S'};
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         if (SpeechRecognition) {
             const recognition = new SpeechRecognition();
-            recognition.continuous = false;
-            recognition.lang = 'en-US';
-            recognition.interimResults = false;
-
             recognition.onstart = () => {
                 voiceStatusEl.innerHTML = '<span class="status-dot bg-blue-500"></span>Listening...';
                 voiceBtn.classList.add('pulse', 'bg-blue-600');
             };
-
             recognition.onresult = (event) => {
                 const transcript = event.results[0][0].transcript.toLowerCase();
-                lastCommandEl.textContent = transcript;
-                
                 for (const key in commands) {
                     if (transcript.includes(key)) {
                         sendCommand(commands[key]);
-                        setTimeout(() => sendCommand('S'), 1500);
+                        setTimeout(() => sendCommand('S'), 1200);
                         break;
                     }
                 }
             };
-
             recognition.onend = () => {
                 voiceStatusEl.innerHTML = '<span class="status-dot bg-slate-500"></span>Voice Idle';
                 voiceBtn.classList.remove('pulse', 'bg-blue-600');
             };
-
-            voiceBtn.addEventListener('click', () => {
-                try {
-                    recognition.start();
-                } catch(e) { console.error("Voice Error:", e); }
-            });
+            voiceBtn.addEventListener('click', () => recognition.start());
         }
 
         // Keyboard support
@@ -245,11 +262,8 @@
                 case ' ': sendCommand('S'); break;
             }
         });
-
         window.addEventListener('keyup', (e) => {
-            if(['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
-                sendCommand('S');
-            }
+            if(['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) sendCommand('S');
         });
     </script>
 </body>
