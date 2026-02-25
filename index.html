@@ -38,6 +38,13 @@
             display: none;
             background: rgba(15, 23, 42, 0.95);
         }
+        .log-container {
+            font-family: monospace;
+            font-size: 10px;
+            max-height: 60px;
+            overflow-y: auto;
+            background: rgba(0,0,0,0.3);
+        }
     </style>
 </head>
 <body class="flex flex-col h-screen overflow-hidden">
@@ -86,6 +93,9 @@
             <p class="text-slate-400 text-[10px] uppercase tracking-widest mb-1">Last Command</p>
             <div id="lastCommand" class="text-2xl font-mono text-blue-300 h-8 flex items-center justify-center">
                 IDLE
+            </div>
+            <div id="debugLog" class="log-container mt-2 text-slate-500 text-left p-1 rounded">
+                > System ready...
             </div>
         </div>
 
@@ -143,18 +153,26 @@
         const voiceBtn = document.getElementById('voiceBtn');
         const connectBtn = document.getElementById('connectBtn');
         const errorOverlay = document.getElementById('errorOverlay');
+        const debugLogEl = document.getElementById('debugLog');
+
+        function log(msg) {
+            debugLogEl.innerHTML += `<br>> ${msg}`;
+            debugLogEl.scrollTop = debugLogEl.scrollHeight;
+        }
 
         // Toggle Modes
         document.getElementById('modeSerial').addEventListener('click', () => {
             connectionMode = 'serial';
             document.getElementById('modeSerial').className = "flex-1 py-2 rounded-lg text-xs font-bold bg-blue-600 text-white transition";
             document.getElementById('modeBLE').className = "flex-1 py-2 rounded-lg text-xs font-bold text-slate-400 hover:text-white transition";
+            log("Switched to Serial Mode");
         });
 
         document.getElementById('modeBLE').addEventListener('click', () => {
             connectionMode = 'ble';
             document.getElementById('modeBLE').className = "flex-1 py-2 rounded-lg text-xs font-bold bg-blue-600 text-white transition";
             document.getElementById('modeSerial').className = "flex-1 py-2 rounded-lg text-xs font-bold text-slate-400 hover:text-white transition";
+            log("Switched to BLE Mode");
         });
 
         // Connection Handler
@@ -167,33 +185,50 @@
                 }
             } catch (err) {
                 console.error('Connection error:', err);
+                log("Error: " + err.message);
                 if (err.name === 'SecurityError' || err.message.includes('permissions policy')) {
                     errorOverlay.style.display = 'flex';
-                } else {
-                    lastCommandEl.textContent = "Error: " + err.name;
+                } else if (err.name === 'NotFoundError') {
+                    log("No device selected");
                 }
             }
         });
 
         async function connectSerial() {
-            if (!navigator.serial) throw { name: 'SerialNotSupported' };
+            if (!navigator.serial) {
+                log("Serial not supported on this device/browser");
+                return;
+            }
+            log("Requesting Serial Port...");
             port = await navigator.serial.requestPort();
             await port.open({ baudRate: 9600 });
             writer = port.writable.getWriter();
             setConnectedStatus(true);
+            log("Serial Connected!");
         }
 
         async function connectBLE() {
-            if (!navigator.bluetooth) throw { name: 'BluetoothNotSupported' };
+            if (!navigator.bluetooth) {
+                log("Bluetooth not supported on this device/browser");
+                return;
+            }
+            log("Scanning for BLE devices...");
             bluetoothDevice = await navigator.bluetooth.requestDevice({
-                filters: [{ namePrefix: 'HC' }, { namePrefix: 'BT' }, { namePrefix: 'HM' }],
+                acceptAllDevices: true,
                 optionalServices: ['0000ffe0-0000-1000-8000-00805f9b34fb']
             });
+            log("Connecting to GATT server...");
             const server = await bluetoothDevice.gatt.connect();
+            log("Getting Service...");
             const service = await server.getPrimaryService('0000ffe0-0000-1000-8000-00805f9b34fb');
+            log("Getting Characteristic...");
             characteristic = await service.getCharacteristic('0000ffe1-0000-1000-8000-00805f9b34fb');
             setConnectedStatus(true);
-            bluetoothDevice.addEventListener('gattserverdisconnected', () => setConnectedStatus(false));
+            log("BLE Connected!");
+            bluetoothDevice.addEventListener('gattserverdisconnected', () => {
+                setConnectedStatus(false);
+                log("BLE Disconnected");
+            });
         }
 
         function setConnectedStatus(connected) {
@@ -219,9 +254,12 @@
                     await writer.write(data);
                 } else if (connectionMode === 'ble' && characteristic) {
                     await characteristic.writeValue(data);
+                } else {
+                    // Feedback even if not connected for testing
+                    log("Cmd: " + command + " (Not Connected)");
                 }
             } catch (e) {
-                console.error("Send failed:", e);
+                log("Send Error: " + e.message);
             }
         }
 
@@ -236,6 +274,7 @@
             };
             recognition.onresult = (event) => {
                 const transcript = event.results[0][0].transcript.toLowerCase();
+                log("Voice: " + transcript);
                 for (const key in commands) {
                     if (transcript.includes(key)) {
                         sendCommand(commands[key]);
@@ -248,7 +287,10 @@
                 voiceStatusEl.innerHTML = '<span class="status-dot bg-slate-500"></span>Voice Idle';
                 voiceBtn.classList.remove('pulse', 'bg-blue-600');
             };
-            voiceBtn.addEventListener('click', () => recognition.start());
+            voiceBtn.addEventListener('click', () => {
+                log("Starting Voice Recognition...");
+                recognition.start();
+            });
         }
 
         // Keyboard support
